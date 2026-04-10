@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al67X Simulator</title>
+    <link rel="icon" href="player.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <!-- Load Google Fonts for Cool Math Games vibes -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Progress Bar (XP) -->
+    <div id="xp-bar-container">
+        <div id="xp-bar-fill"></div>
+        <div id="level-display">LVL <span id="level-num">1</span></div>
+    </div>
+
+    <!-- HUD (Score & Timer) -->
+    <div id="hud" class="hidden">
+        <div class="top-hud">
+            <div id="timer">00:00</div>
+            <div class="score-container">
+                <span>Rizz Points:</span>
+                <span id="score">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hub Game Selection Screen Overlay -->
+    <div id="hub-screen" class="overlay active">
+        <div class="panel" style="width: 800px; max-width: 95%;">
+            <h1 class="bounce-title">AL67X Simulator</h1>
+            <p>Select your experience:</p>
+            <div class="game-selection-grid">
+                <div class="game-card" id="select-day-at-shop">
+                    <h2>DAY AT THE SHOP</h2>
+                    <p>Build your swarm, survive the onslaught.</p>
+                </div>
+                <div class="game-card locked">
+                    <h2>COMING SOON</h2>
+                    <p>???</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen Overlay -->
+    <div id="start-screen" class="overlay hidden">
+        <div class="panel">
+            <h1 class="bounce-title">AL67X Simulator</h1>
+            <p>Collect yellow orbs to build up your followers!<br>Avoid the spikey guys or you get completely cooked!</p>
+            <div class="difficulty-buttons">
+                <button id="start-normal-btn" class="bouncy-btn diff-normal">NORMAL MODE</button>
+                <button id="start-allen-btn" class="bouncy-btn diff-allen">ALLEN MODE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Overlay -->
+    <div id="game-over-screen" class="overlay hidden">
+        <div class="panel destructive">
+            <h1 class="bounce-title">OH SNAP!</h1>
+            <p>Your swarm just got completely cooked.</p>
+            <p class="final-score">TOTAL RIZZ: <span id="final-score">0</span></p>
+            <div class="difficulty-buttons">
+                <button id="restart-btn" class="bouncy-btn destructive-btn">PLAY AGAIN</button>
+                <button id="menu-btn" class="bouncy-btn" style="background:#fff; color:#000;">MAIN MENU</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Screen Overlay -->
+    <div id="pause-screen" class="overlay hidden">
+        <div class="panel">
+            <h1>PAUSED</h1>
+            <p>Take a breather bro...</p>
+        </div>
+    </div>
+
+    <!-- Level Up Overlay -->
+    <div id="level-up-screen" class="overlay hidden">
+        <div class="panel level-up-panel">
+            <h1 class="bounce-title">LEVEL UP!</h1>
+            <p>Pick a brand new crazy card!</p>
+            <div id="cards-container" class="cards-container">
+                <!-- Cards injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Images Preloader (hidden) -->
+    <div style="display:none;">
+        <img id="img-player" src="player.png" alt="Player">
+        <img id="img-enemy" src="enemy.png" alt="Enemy">
+        <img id="img-enemy-charger" src="enemy_charger.png" alt="Charger">
+        <img id="img-enemy-tank" src="enemy_tank.png" alt="Tank">
+        <img id="img-enemy-ghost" src="ghost.png" alt="Ghost">
+        <img id="img-item" src="item.png" alt="Item">
+        <img id="img-bg" src="background.png" alt="Background">
+        <img id="img-power-nuke" src="nuke.png">
+        <img id="img-power-star" src="star.png">
+        <img id="img-power-slow" src="slow.png">
+    </div>
+
+    <!-- Scripts -->
+    <script src="game.js"></script>
+</body>
+</html>
