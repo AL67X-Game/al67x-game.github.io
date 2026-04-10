@@ -188,32 +188,53 @@ function formatTime(seconds) {
 }
 
 // Apply text strings from content.js
+// Apply text strings from content.js
 function applyGameText() {
+    // Safety check if GAME_TEXT failed to load
+    if (typeof GAME_TEXT === 'undefined') {
+        console.error("AL67X Error: GAME_TEXT not found in content.js!");
+        return;
+    }
     const t = GAME_TEXT;
-    const s = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    const h = (id, txt) => { const el = document.getElementById(id); if (el) el.innerHTML = txt; };
+    const s = (id, txt) => { const el = document.getElementById(id); if (el && txt !== undefined) el.textContent = txt; };
+    const h = (id, txt) => { const el = document.getElementById(id); if (el && txt !== undefined) el.innerHTML = txt; };
+    
+    // Hub
     s('hub-title', t.hub.title);
     s('hub-subtitle', t.hub.subtitle);
     s('hub-card1-title', t.hub.modeCard1Title);
     s('hub-card1-desc', t.hub.modeCard1Desc);
     s('hub-card2-title', t.hub.modeCard2Title);
     s('hub-card2-desc', t.hub.modeCard2Desc);
+    
+    // Start Screen
     s('start-title', t.startScreen.title);
     h('start-desc', t.startScreen.desc);
     s('start-normal-btn', t.startScreen.normalBtn);
     s('start-allen-btn', t.startScreen.allenBtn);
+    
+    // Game Over
     s('gameover-title', t.gameOver.title);
     s('gameover-desc', t.gameOver.desc);
     s('gameover-score-label', t.gameOver.scoreLabel);
     s('restart-btn', t.gameOver.playAgainBtn);
     s('menu-btn', t.gameOver.menuBtn);
+    
+    // HUD
+    s('hud-score-label', t.hud.scoreLabel);
+    s('hud-gems-label', t.hud.gemsLabel);
+    s('hud-level-prefix', t.hud.levelPrefix);
+    
+    // Misc
     s('pause-title', t.pause.title);
     s('pause-desc', t.pause.desc);
     s('levelup-title', t.levelUp.title);
     s('levelup-subtitle', t.levelUp.subtitle);
-    s('hud-score-label', t.hud.scoreLabel);
 }
-applyGameText();
+
+// Initial call on load
+window.addEventListener('DOMContentLoaded', applyGameText);
+applyGameText(); // Direct call as a backup if DOM is already ready
 
 // ── GEM CLASS ───────────────────────────────────────────────
 class Gem {
@@ -1049,6 +1070,7 @@ function addXp(amount = 1) {
 function initGame(diffMode) {
     if (diffMode) globalDifficulty = diffMode;
     
+    applyGameText(); // Re-sync text on game start
     resizeCanvas();
     score = 0;
     gameTimeSeconds = 0;
