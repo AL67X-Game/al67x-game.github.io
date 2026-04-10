@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Al67X Simulator</title>
     <link rel="icon" href="player.png" type="image/png">
     <link rel="stylesheet" href="style.css">
-    <!-- Load Google Fonts for Cool Math Games vibes -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -17,13 +16,17 @@
         <div id="level-display">LVL <span id="level-num">1</span></div>
     </div>
 
-    <!-- HUD (Score & Timer) -->
+    <!-- HUD (Score, Gems & Timer) -->
     <div id="hud" class="hidden">
         <div class="top-hud">
             <div id="timer">00:00</div>
             <div class="score-container">
-                <span>Rizz Points:</span>
+                <span id="hud-score-label">Rizz Points:</span>
                 <span id="score">0</span>
+            </div>
+            <div class="gems-container">
+                <span>💎</span>
+                <span id="gems-display">0</span>
             </div>
         </div>
     </div>
@@ -31,16 +34,16 @@
     <!-- Hub Game Selection Screen Overlay -->
     <div id="hub-screen" class="overlay active">
         <div class="panel" style="width: 800px; max-width: 95%;">
-            <h1 class="bounce-title">AL67X Simulator</h1>
-            <p>Select your experience:</p>
+            <h1 class="bounce-title" id="hub-title">AL67X Simulator</h1>
+            <p id="hub-subtitle">Select your experience:</p>
             <div class="game-selection-grid">
                 <div class="game-card" id="select-day-at-shop">
-                    <h2>DAY AT THE SHOP</h2>
-                    <p>Build your swarm, survive the onslaught.</p>
+                    <h2 id="hub-card1-title">DAY AT THE SHOP</h2>
+                    <p id="hub-card1-desc">Build your swarm, survive the onslaught.</p>
                 </div>
                 <div class="game-card locked">
-                    <h2>COMING SOON</h2>
-                    <p>???</p>
+                    <h2 id="hub-card2-title">COMING SOON</h2>
+                    <p id="hub-card2-desc">???</p>
                 </div>
             </div>
         </div>
@@ -49,8 +52,8 @@
     <!-- Start Screen Overlay -->
     <div id="start-screen" class="overlay hidden">
         <div class="panel">
-            <h1 class="bounce-title">AL67X Simulator</h1>
-            <p>Collect yellow orbs to build up your followers!<br>Avoid the spikey guys or you get completely cooked!</p>
+            <h1 class="bounce-title" id="start-title">AL67X Simulator</h1>
+            <p id="start-desc">Collect yellow orbs to build up your followers!<br>Avoid the spikey guys or you get completely cooked!</p>
             <div class="difficulty-buttons">
                 <button id="start-normal-btn" class="bouncy-btn diff-normal">NORMAL MODE</button>
                 <button id="start-allen-btn" class="bouncy-btn diff-allen">ALLEN MODE</button>
@@ -61,9 +64,9 @@
     <!-- Game Over Overlay -->
     <div id="game-over-screen" class="overlay hidden">
         <div class="panel destructive">
-            <h1 class="bounce-title">OH SNAP!</h1>
-            <p>Your swarm just got completely cooked.</p>
-            <p class="final-score">TOTAL RIZZ: <span id="final-score">0</span></p>
+            <h1 class="bounce-title" id="gameover-title">OH SNAP!</h1>
+            <p id="gameover-desc">Your swarm just got completely cooked.</p>
+            <p class="final-score"><span id="gameover-score-label">TOTAL RIZZ:</span> <span id="final-score">0</span></p>
             <div class="difficulty-buttons">
                 <button id="restart-btn" class="bouncy-btn destructive-btn">PLAY AGAIN</button>
                 <button id="menu-btn" class="bouncy-btn" style="background:#fff; color:#000;">MAIN MENU</button>
@@ -74,16 +77,16 @@
     <!-- Pause Screen Overlay -->
     <div id="pause-screen" class="overlay hidden">
         <div class="panel">
-            <h1>PAUSED</h1>
-            <p>Take a breather bro...</p>
+            <h1 id="pause-title">PAUSED</h1>
+            <p id="pause-desc">Take a breather bro...</p>
         </div>
     </div>
 
     <!-- Level Up Overlay -->
     <div id="level-up-screen" class="overlay hidden">
-        <div class="panel level-up-panel">
-            <h1 class="bounce-title">LEVEL UP!</h1>
-            <p>Pick a brand new crazy card!</p>
+        <div class="level-up-panel">
+            <h1 class="bounce-title level-up-heading" id="levelup-title">LEVEL UP!</h1>
+            <p class="level-up-subtitle" id="levelup-subtitle">Pick a brand new crazy card!</p>
             <div id="cards-container" class="cards-container">
                 <!-- Cards injected here -->
             </div>
@@ -107,7 +110,8 @@
         <img id="img-power-slow" src="slow.png">
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts: content config first, then game logic -->
+    <script src="content.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

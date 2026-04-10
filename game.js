@@ -11,6 +11,7 @@ const cardsContainer = document.getElementById('cards-container');
 const hud = document.getElementById('hud');
 
 const scoreDisplay = document.getElementById('score');
+const gemsDisplay = document.getElementById('gems-display');
 const finalScoreDisplay = document.getElementById('final-score');
 const timerDisplay = document.getElementById('timer');
 
@@ -88,10 +89,15 @@ let invincibleTimer = 0;
 let timeFreezeTimer = 0; // Acts as a "slow" now
 
 // Map & Camera
-const MAP_WIDTH = 3000;
-const MAP_HEIGHT = 3000;
+const MAP_WIDTH = 6000;
+const MAP_HEIGHT = 6000;
 const camera = { x: 0, y: 0 };
 let cameraZoom = 1.0;
+let autoZoom = 1.0;
+let userZoom = 1.0;
+let targetUserZoom = 1.0;
+const MIN_ZOOM = 0.25;
+const MAX_ZOOM = 2.5;
 
 // Inputs
 const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -100,13 +106,24 @@ function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     if (window.innerWidth < 800) {
-        cameraZoom = window.innerWidth / 800;
+        autoZoom = window.innerWidth / 800;
     } else {
-        cameraZoom = 1.0;
+        autoZoom = 1.0;
     }
+    cameraZoom = autoZoom * userZoom;
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
+
+// Scroll wheel zoom
+window.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    targetUserZoom += e.deltaY * -0.0012;
+    targetUserZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetUserZoom));
+}, { passive: false });
+
+// Pinch zoom state
+let lastPinchDist = 0;
 
 window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
@@ -114,19 +131,37 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // prevent scrolling
-    if(e.touches.length > 0) {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+        // Pinch zoom
+        const d = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (lastPinchDist > 0) {
+            targetUserZoom *= d / lastPinchDist;
+            targetUserZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, targetUserZoom));
+        }
+        lastPinchDist = d;
+    } else if (e.touches.length === 1) {
         mouse.x = e.touches[0].clientX;
         mouse.y = e.touches[0].clientY;
     }
-}, {passive: false});
+}, { passive: false });
 
 window.addEventListener('touchstart', (e) => {
-    if(e.touches.length > 0) {
+    if (e.touches.length === 2) {
+        lastPinchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+    } else if (e.touches.length === 1) {
         mouse.x = e.touches[0].clientX;
         mouse.y = e.touches[0].clientY;
     }
-}, {passive: false});
+}, { passive: false });
+
+window.addEventListener('touchend', () => { lastPinchDist = 0; });
 
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -150,6 +185,96 @@ function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Apply text strings from content.js
+function applyGameText() {
+    const t = GAME_TEXT;
+    const s = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    const h = (id, txt) => { const el = document.getElementById(id); if (el) el.innerHTML = txt; };
+    s('hub-title', t.hub.title);
+    s('hub-subtitle', t.hub.subtitle);
+    s('hub-card1-title', t.hub.modeCard1Title);
+    s('hub-card1-desc', t.hub.modeCard1Desc);
+    s('hub-card2-title', t.hub.modeCard2Title);
+    s('hub-card2-desc', t.hub.modeCard2Desc);
+    s('start-title', t.startScreen.title);
+    h('start-desc', t.startScreen.desc);
+    s('start-normal-btn', t.startScreen.normalBtn);
+    s('start-allen-btn', t.startScreen.allenBtn);
+    s('gameover-title', t.gameOver.title);
+    s('gameover-desc', t.gameOver.desc);
+    s('gameover-score-label', t.gameOver.scoreLabel);
+    s('restart-btn', t.gameOver.playAgainBtn);
+    s('menu-btn', t.gameOver.menuBtn);
+    s('pause-title', t.pause.title);
+    s('pause-desc', t.pause.desc);
+    s('levelup-title', t.levelUp.title);
+    s('levelup-subtitle', t.levelUp.subtitle);
+    s('hud-score-label', t.hud.scoreLabel);
+}
+applyGameText();
+
+// ── GEM CLASS ───────────────────────────────────────────────
+class Gem {
+    constructor(x, y) {
+        this.x = x + (Math.random() - 0.5) * 60;
+        this.y = y + (Math.random() - 0.5) * 60;
+        this.radius = 10;
+        this.vx = (Math.random() - 0.5) * 220;
+        this.vy = (Math.random() - 0.5) * 220 - 80;
+        this.floatOffset = Math.random() * Math.PI * 2;
+        this.dead = false;
+    }
+    update(dt) {
+        this.vx *= Math.pow(0.15, dt);
+        this.vy *= Math.pow(0.15, dt);
+        this.vy += 60 * dt;
+
+        const magnetRange = 500 + (playerUpgrades.magnet * 400);
+        const d = dist(mainPlayer.x, mainPlayer.y, this.x, this.y);
+        if (d < magnetRange) {
+            const angle = Math.atan2(mainPlayer.y - this.y, mainPlayer.x - this.x);
+            const pull = 900 * dt * (1 - (d / magnetRange) * 0.5);
+            this.x += Math.cos(angle) * pull;
+            this.y += Math.sin(angle) * pull;
+        }
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        if (dist(this.x, this.y, mainPlayer.x, mainPlayer.y) < mainPlayer.radius + this.radius + 10) {
+            this.dead = true;
+            gemsCount++;
+            gemsDisplay.innerText = gemsCount;
+        }
+    }
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        const pulse = Math.sin(performance.now() * 0.006 + this.floatOffset) * 2;
+        const r = this.radius + pulse;
+        ctx.shadowBlur = 14 + pulse;
+        ctx.shadowColor = '#00ff88';
+        // Diamond shape
+        ctx.fillStyle = '#00e87a';
+        ctx.beginPath();
+        ctx.moveTo(0, -r);
+        ctx.lineTo(r * 0.65, 0);
+        ctx.lineTo(0, r);
+        ctx.lineTo(-r * 0.65, 0);
+        ctx.closePath();
+        ctx.fill();
+        // Highlight facet
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.65);
+        ctx.lineTo(r * 0.28, -r * 0.1);
+        ctx.lineTo(0, r * 0.12);
+        ctx.lineTo(-r * 0.28, -r * 0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
 }
 
 class Bomb {
@@ -405,11 +530,13 @@ class Follower {
 class EnemyBase {
     constructor(radius, speedBase, imgRef) {
         this.radius = radius;
-        this.x = Math.random() * MAP_WIDTH;
-        this.y = Math.random() * MAP_HEIGHT;
-        if (dist(this.x, this.y, mainPlayer.x, mainPlayer.y) < 800) {
-            this.x += 1000;
-        }
+        // Spawn at a safe radial distance from the player
+        const spawnAngle = Math.random() * Math.PI * 2;
+        const spawnDist = 1200 + Math.random() * 600;
+        this.x = mainPlayer.x + Math.cos(spawnAngle) * spawnDist;
+        this.y = mainPlayer.y + Math.sin(spawnAngle) * spawnDist;
+        this.x = Math.max(this.radius + 10, Math.min(MAP_WIDTH - this.radius - 10, this.x));
+        this.y = Math.max(this.radius + 10, Math.min(MAP_HEIGHT - this.radius - 10, this.y));
         
         let diffMultiplier = 1.0;
         if (globalDifficulty === 'allen') diffMultiplier = 1.2;
@@ -826,63 +953,53 @@ let bombs = [];
 let lasers = [];
 let deathEffects = [];
 let orbitalSaws = [];
+let gems = [];
+let gemsCount = 0;
 
-const UPGRADE_POOL = [
-    { id: 'blaster', name: 'Sigma Beam', icon: '🗿', desc: 'Shoots a projectile at the nearest ops every 3s. +1 target per rank.' },
-    { id: 'fireRate', name: 'Adrenaline Injector', icon: '💉', desc: 'Drastically increases the fire rate of all your weapons.' },
-    { id: 'bulletSpeed', name: 'Ohio Express', icon: '💀', desc: 'Increases bullet velocity significantly so they escape.' },
-    { id: 'pierce', name: 'Gyatt Splitter', icon: '🏹', desc: 'Projectiles rip straight through targets.' },
-    { id: 'orbit', name: 'Edge Lord Aura', icon: '🤫', desc: 'Mewing streak spawns an orbiting blade that cuts ops.' },
-    { id: 'magnet', name: 'Infinite Rizz', icon: '🧲', desc: 'Cores get magnetically rizzed toward you from vast distances.' },
-    { id: 'speed', name: 'Goonspeed', icon: '📈', desc: 'Increases base player movement speed by 25%.' },
-            { id: 'nuke', name: 'Skibidi Nuke', icon: '🚽', desc: 'Drops a massive exploding AOE bomb perfectly tracking ops every 4s.' },
-    { id: 'hawk', name: 'Hawk Tuah Spray', icon: '💦', desc: 'Spits a heavy shotgun cone of fast projectiles that auto-target the nearest op.' },
-    { id: 'swarm', name: 'Fanum Tax Swarm', icon: '🍕', desc: 'Instantly tax +5 followers safely! (Repeatable)' },
-    { id: 'tims', name: 'Guy at Tims', icon: '❤️', desc: 'Shoots a slow heart that instantly explodes ops into a massive shockwave on hit.' },
-    { id: 'aura', name: 'Aura Shield', icon: '🛡️', desc: 'You gain a recharging shield ring that instantly vapes enemies touching it. (+2 charges per rank)' },
-    { id: 'laser', name: 'Looksmaxxing Laser', icon: '🔦', desc: 'Periodically blasts a screen-wide vertical laser deleting everything in its path.' },
-    { id: 'nova', name: 'Domain Expansion', icon: '✨', desc: 'Fires a full 360-degree blast ring perfectly around you. 8 sec cooldown.' }
-];
+// Upgrade pool sourced from content.js — edit card names/descriptions there!
+const UPGRADE_POOL = GAME_TEXT.cards;
 
 function triggerLevelUp() {
     gameState = 'LEVEL_UP';
     level++;
-    xpToNextLevel = Math.floor(xpToNextLevel * 1.5);
+    xpToNextLevel = Math.floor(xpToNextLevel * 1.4);
     xpBarFill.style.width = '0%';
-    levelNumDisplay.innerText = level;
+    if (levelNumDisplay) levelNumDisplay.innerText = level;
 
     cardsContainer.innerHTML = '';
-    
+
     let shuffled = [...UPGRADE_POOL].sort(() => 0.5 - Math.random());
     let picks = shuffled.slice(0, 3);
-    
-    for(let i=0; i<3; i++) {
+
+    for (let i = 0; i < 3; i++) {
         const upgrade = picks[i];
-        const rankStr = upgrade.id !== 'swarm' ? `Current Rank: ${playerUpgrades[upgrade.id]}` : 'Instant Effect';
-        
+        const rankStr = upgrade.id !== 'swarm'
+            ? `Rank: ${playerUpgrades[upgrade.id] || 0}`
+            : 'Instant Effect';
+        const rarity = upgrade.rarity || 'common';
+
         const card = document.createElement('div');
-        card.className = 'upgrade-card';
+        card.className = `upgrade-card rarity-${rarity}`;
         card.innerHTML = `
-            <div class="card-icon">${upgrade.icon}</div>
-            <div class="card-title">${upgrade.name}</div>
-            <div class="card-desc">${upgrade.desc}</div>
-            <div class="card-rank">${rankStr}</div>
+            <div class="card-header">
+                <div class="card-title">${upgrade.name}</div>
+            </div>
+            <div class="card-art">${upgrade.icon}</div>
+            <div class="card-text-box">
+                <div class="card-desc">${upgrade.desc}</div>
+                <div class="card-footer">
+                    <div class="card-rank">${rankStr}</div>
+                    <div class="card-rarity-badge rarity-badge-${rarity}">${rarity}</div>
+                </div>
+            </div>
         `;
-        
-        card.addEventListener('click', () => {
-            selectUpgrade(upgrade.id);
-        });
-        
+
+        card.addEventListener('click', () => selectUpgrade(upgrade.id));
         cardsContainer.appendChild(card);
     }
-    
+
     levelUpScreen.classList.remove('hidden');
-    
-    levelUpScreen.querySelector('.panel').style.animation = 'none';
-    setTimeout(() => {
-        levelUpScreen.querySelector('.panel').style.animation = '';
-        levelUpScreen.classList.add('active');
-    }, 10);
+    setTimeout(() => levelUpScreen.classList.add('active'), 10);
 }
 
 function syncOrbitalSaws() {
@@ -917,17 +1034,15 @@ function selectUpgrade(id) {
     }, 300);
 }
 
-function addXp() {
-    totalXp++;
-    let progress = (totalXp / xpToNextLevel) * 100;
-    
+function addXp(amount = 1) {
+    totalXp += amount;
     if (totalXp >= xpToNextLevel) {
         totalXp = 0;
-        progress = 100;
-        setTimeout(triggerLevelUp, 50); 
+        xpBarFill.style.width = '100%';
+        setTimeout(triggerLevelUp, 50);
+        return;
     }
-    
-    xpBarFill.style.width = `${progress}%`;
+    xpBarFill.style.width = `${(totalXp / xpToNextLevel) * 100}%`;
 }
 
 
@@ -962,8 +1077,12 @@ function initGame(diffMode) {
     shieldCooldown = 0;
     
     scoreDisplay.innerText = score;
+    gemsDisplay.innerText = 0;
+    userZoom = 1.0;
+    targetUserZoom = 1.0;
+    cameraZoom = autoZoom;
     timerDisplay.innerText = "00:00";
-    levelNumDisplay.innerText = level;
+    if (levelNumDisplay) levelNumDisplay.innerText = level;
     xpBarFill.style.width = '0%';
     xpBarContainer.style.display = 'block';
 
@@ -977,11 +1096,13 @@ function initGame(diffMode) {
     lasers = [];
     deathEffects = [];
     orbitalSaws = [];
+    gems = [];
+    gemsCount = 0;
     mouse.x = canvas.width / 2;
     mouse.y = canvas.height / 2;
-    
-    for(let i=0; i<60; i++) items.push(new Item());
-    for(let i=0; i<5; i++) spawnEnemy();
+
+    for (let i = 0; i < 150; i++) items.push(new Item());
+    for (let i = 0; i < 5; i++) spawnEnemy();
     
     gameState = 'PLAYING';
     
@@ -1005,9 +1126,11 @@ function spawnEnemy() {
     // If ghosts unlocked, 30% chance to spawn ghost
     if (ghostsUnlocked && roll < 0.3) {
         enemies.push(new EnemyGhost());
-    } else if (gameTimeSeconds > 30 && roll < 0.2) {
+    } else if (gameTimeSeconds > 15 && roll < 0.25) {
+        // Tank enemies now spawn after 15 seconds in all modes
         enemies.push(new EnemyTank());
-    } else if (gameTimeSeconds > 15 && roll < 0.5) {
+    } else if (gameTimeSeconds > 10 && roll < 0.5) {
+        // Chargers start appearing after 10 seconds
         enemies.push(new EnemyCharger());
     } else {
         enemies.push(new EnemyNormal());
@@ -1104,6 +1227,10 @@ function autoHeart() {
 
 function update(dt) {
     if (gameState !== 'PLAYING') return;
+
+    // Smooth Zoom Interpolation
+    userZoom = lerp(userZoom, targetUserZoom, 1 - Math.pow(0.001, dt)); // Decoupled from framerate
+    cameraZoom = autoZoom * userZoom;
 
     if (invincibleTimer > 0) invincibleTimer -= dt;
     if (timeFreezeTimer > 0) timeFreezeTimer -= dt;
@@ -1207,6 +1334,15 @@ function update(dt) {
         
         if (enemy.dead) {
             deathEffects.push(new DeathEffect(enemy.x, enemy.y));
+            // Drop 1–3 gems
+            const dropCount = 1 + Math.floor(Math.random() * 3);
+            for (let g = 0; g < dropCount; g++) gems.push(new Gem(enemy.x, enemy.y));
+            // Award XP scaled by enemy type
+            let xpReward = 2;
+            if (enemy.type === 'tank')    xpReward = 5;
+            else if (enemy.type === 'charger') xpReward = 3;
+            else if (enemy.type === 'ghost')   xpReward = 3;
+            addXp(xpReward);
             enemies.splice(i, 1);
             continue;
         }
@@ -1264,7 +1400,7 @@ function update(dt) {
         }
     }
 
-    if (items.length < 80 && Math.random() < Math.max(0.1, dt)) {
+    if (items.length < 200 && Math.random() < Math.max(0.1, dt)) {
         items.push(new Item());
     }
     
@@ -1308,6 +1444,12 @@ function update(dt) {
             }
             powerups.splice(i, 1);
         }
+    }
+
+    // Update gems
+    for (let i = gems.length - 1; i >= 0; i--) {
+        gems[i].update(dt);
+        if (gems[i].dead) gems.splice(i, 1);
     }
 }
 
@@ -1358,6 +1500,7 @@ function draw(time) {
 
         items.forEach(item => item.draw(time));
         powerups.forEach(p => p.draw(time));
+        gems.forEach(gem => gem.draw());
         
         deathEffects.forEach(effect => effect.draw());
         bombs.forEach(bomb => bomb.draw());
@@ -1386,10 +1529,10 @@ function draw(time) {
             ctx.textAlign = 'center';
             ctx.shadowBlur = 20;
             ctx.shadowColor = '#00f3ff';
-            ctx.fillText('SPECIAL ROUND!', mainPlayer.x, mainPlayer.y - 300);
+            ctx.fillText(GAME_TEXT.specialWave.header, mainPlayer.x, mainPlayer.y - 300);
             ctx.font = '50px Fredoka';
             ctx.fillStyle = '#fff';
-            ctx.fillText('ELIMINATE THE DREAMY BULLS', mainPlayer.x, mainPlayer.y - 200);
+            ctx.fillText(GAME_TEXT.specialWave.subtext, mainPlayer.x, mainPlayer.y - 200);
         }
         
         ctx.restore();
