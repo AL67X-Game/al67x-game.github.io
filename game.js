@@ -107,6 +107,21 @@ window.addEventListener('mousemove', (e) => {
     mouse.y = e.clientY;
 });
 
+window.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // prevent scrolling
+    if(e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    }
+}, {passive: false});
+
+window.addEventListener('touchstart', (e) => {
+    if(e.touches.length > 0) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+    }
+}, {passive: false});
+
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (gameState === 'PLAYING') {
