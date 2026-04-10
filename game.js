@@ -699,8 +699,8 @@ class EnemyCharger extends EnemyBase {
 
 class EnemyTank extends EnemyBase {
     constructor() {
-        super(100, 70 + (gameTimeSeconds * 0.2), imgEnemyTank);
-        this.hp = 3;
+        super(100, 75 + (gameTimeSeconds * 0.35), imgEnemyTank);
+        this.hp = 6;
         this.type = 'tank';
         this.glowColor = '0, 255, 85'; // rgb green
     }
@@ -1144,15 +1144,18 @@ function initGame(diffMode) {
 
 function spawnEnemy() {
     const roll = Math.random();
+    const isAllen = globalDifficulty === 'allen';
+    const tankThreshold = isAllen ? 30 : 45;
     
+    // Tank probability scales from 10% to 30% over 5 minutes
+    const tankProb = 0.1 + Math.min(0.2, gameTimeSeconds / 300);
+
     // If ghosts unlocked, 30% chance to spawn ghost
     if (ghostsUnlocked && roll < 0.3) {
         enemies.push(new EnemyGhost());
-    } else if (gameTimeSeconds > 15 && roll < 0.25) {
-        // Tank enemies now spawn after 15 seconds in all modes
+    } else if (gameTimeSeconds > tankThreshold && roll < tankProb) {
         enemies.push(new EnemyTank());
     } else if (gameTimeSeconds > 10 && roll < 0.5) {
-        // Chargers start appearing after 10 seconds
         enemies.push(new EnemyCharger());
     } else {
         enemies.push(new EnemyNormal());
