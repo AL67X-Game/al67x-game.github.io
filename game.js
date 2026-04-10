@@ -91,6 +91,7 @@ let timeFreezeTimer = 0; // Acts as a "slow" now
 const MAP_WIDTH = 3000;
 const MAP_HEIGHT = 3000;
 const camera = { x: 0, y: 0 };
+let cameraZoom = 1.0;
 
 // Inputs
 const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
@@ -98,6 +99,11 @@ const mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    if (window.innerWidth < 800) {
+        cameraZoom = window.innerWidth / 800;
+    } else {
+        cameraZoom = 1.0;
+    }
 }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
@@ -242,8 +248,8 @@ class Player {
     }
 
     update(dt) {
-        const targetX = mouse.x + camera.x;
-        const targetY = mouse.y + camera.y;
+        const targetX = (mouse.x / cameraZoom) + camera.x;
+        const targetY = (mouse.y / cameraZoom) + camera.y;
 
         let currentSpeed = this.baseSpeed * (1 + (playerUpgrades.speed * 0.25));
         if (invincibleTimer > 0) {
@@ -1032,13 +1038,15 @@ function backToStartMenu() {
 }
 
 function updateCamera() {
-    camera.x = mainPlayer.x - canvas.width / 2;
-    camera.y = mainPlayer.y - canvas.height / 2;
+    const viewW = canvas.width / cameraZoom;
+    const viewH = canvas.height / cameraZoom;
+    camera.x = mainPlayer.x - viewW / 2;
+    camera.y = mainPlayer.y - viewH / 2;
 
     if (camera.x < -200) camera.x = -200;
     if (camera.y < -200) camera.y = -200;
-    if (camera.x > MAP_WIDTH - canvas.width + 200) camera.x = MAP_WIDTH - canvas.width + 200;
-    if (camera.y > MAP_HEIGHT - canvas.height + 200) camera.y = MAP_HEIGHT - canvas.height + 200;
+    if (camera.x > MAP_WIDTH - viewW + 200) camera.x = MAP_WIDTH - viewW + 200;
+    if (camera.y > MAP_HEIGHT - viewH + 200) camera.y = MAP_HEIGHT - viewH + 200;
 }
 
 function autoBlaster() {
@@ -1308,6 +1316,7 @@ function drawBackground() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
+    ctx.scale(cameraZoom, cameraZoom);
     ctx.translate(-camera.x, -camera.y);
 
     if (imgBg && imgBg.complete && imgBg.naturalHeight !== 0) {
@@ -1344,6 +1353,7 @@ function draw(time) {
 
     if (gameState === 'PLAYING' || gameState === 'GAMEOVER' || gameState === 'PAUSED' || gameState === 'LEVEL_UP') {
         ctx.save();
+        ctx.scale(cameraZoom, cameraZoom);
         ctx.translate(-camera.x, -camera.y);
 
         items.forEach(item => item.draw(time));
