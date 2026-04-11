@@ -7,6 +7,7 @@
     <link rel="icon" href="player.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
+
 </head>
 <body>
 
@@ -66,9 +67,30 @@
         <div class="panel destructive">
             <h1 class="bounce-title" id="gameover-title">OH SNAP!</h1>
             <p id="gameover-desc">Your swarm just got completely cooked.</p>
-            <p class="final-score"><span id="gameover-score-label">TOTAL RIZZ:</span> <span id="final-score">0</span></p>
+            
+            <div class="death-stats">
+                <div class="stat-group">
+                    <span id="gameover-score-label">TOTAL RIZZ:</span>
+                    <span id="final-score">0</span>
+                    <div class="pb-label">Best: <span id="pb-score">0</span></div>
+                </div>
+                <div class="stat-group">
+                    <span id="gameover-gems-label">GEMS:</span>
+                    <span id="final-gems">0</span>
+                    <div class="pb-label">Best: <span id="pb-gems">0</span></div>
+                </div>
+            </div>
+
+            <div class="revive-container">
+                <button id="revive-btn" class="bouncy-btn revive-btn">
+                    <span class="btn-icon">❤️</span> <span id="revive-btn-text">REVIVE (WATCH AD)</span>
+                </button>
+            </div>
+
             <div class="difficulty-buttons">
-                <button id="restart-btn" class="bouncy-btn destructive-btn">PLAY AGAIN</button>
+                <button id="restart-btn" class="bouncy-btn destructive-btn">
+                    <span id="restart-btn-text">PLAY AGAIN</span> <span id="restart-timer"></span>
+                </button>
                 <button id="menu-btn" class="bouncy-btn" style="background:#fff; color:#000;">MAIN MENU</button>
             </div>
         </div>

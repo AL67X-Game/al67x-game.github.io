@@ -23,7 +23,12 @@ const btnDayAtShop = document.getElementById('select-day-at-shop');
 const btnNormal = document.getElementById('start-normal-btn');
 const btnAllen = document.getElementById('start-allen-btn');
 const restartBtn = document.getElementById('restart-btn');
+const restartTimerDisplay = document.getElementById('restart-timer');
 const menuBtn = document.getElementById('menu-btn');
+const reviveBtn = document.getElementById('revive-btn');
+const finalGemsDisplay = document.getElementById('final-gems');
+const pbScoreDisplay = document.getElementById('pb-score');
+const pbGemsDisplay = document.getElementById('pb-gems');
 
 // Images
 const imgPlayer = document.getElementById('img-player');
@@ -87,6 +92,7 @@ let shieldCooldown = 0;
 // Rare Power Ups State
 let invincibleTimer = 0;
 let timeFreezeTimer = 0; // Acts as a "slow" now
+let canRevive = true;
 
 // Map & Camera
 const MAP_WIDTH = 6000;
@@ -217,7 +223,14 @@ function applyGameText() {
     s('gameover-title', t.gameOver.title);
     s('gameover-desc', t.gameOver.desc);
     s('gameover-score-label', t.gameOver.scoreLabel);
-    s('restart-btn', t.gameOver.playAgainBtn);
+    s('gameover-gems-label', t.gameOver.gemsLabel);
+    s('revive-btn-text', t.gameOver.reviveBtn);
+    const pbLabels = document.querySelectorAll('.pb-label');
+    pbLabels.forEach(el => {
+        const span = el.querySelector('span');
+        el.innerHTML = `${t.gameOver.pbLabel} ${span ? span.outerHTML : '<span>0</span>'}`;
+    });
+    s('restart-btn-text', t.gameOver.playAgainBtn);
     s('menu-btn', t.gameOver.menuBtn);
     
     // HUD
@@ -1097,6 +1110,13 @@ function initGame(diffMode) {
     timeFreezeTimer = 0;
     shieldCharges = 0;
     shieldCooldown = 0;
+    canRevive = true; // Reset revive each full game start
+    
+    // Load PB from localStorage
+    const savedPBScore = localStorage.getItem('pbScore') || 0;
+    const savedPBGems = localStorage.getItem('pbGems') || 0;
+    if (pbScoreDisplay) pbScoreDisplay.innerText = savedPBScore;
+    if (pbGemsDisplay) pbGemsDisplay.innerText = savedPBGems;
     
     scoreDisplay.innerText = score;
     gemsDisplay.innerText = 0;
@@ -1167,11 +1187,78 @@ function endGame() {
     hud.classList.add('hidden');
     xpBarContainer.style.display = 'none';
     
+    // Check and save PBs
+    const currentPBScore = parseInt(localStorage.getItem('pbScore') || 0);
+    const currentPBGems = parseInt(localStorage.getItem('pbGems') || 0);
+    
+    if (score > currentPBScore) localStorage.setItem('pbScore', score);
+    if (gemsCount > currentPBGems) localStorage.setItem('pbGems', gemsCount);
+    
+    // Update labels
+    if (finalScoreDisplay) finalScoreDisplay.innerText = score;
+    if (finalGemsDisplay) finalGemsDisplay.innerText = gemsCount;
+    if (pbScoreDisplay) pbScoreDisplay.innerText = localStorage.getItem('pbScore');
+    if (pbGemsDisplay) pbGemsDisplay.innerText = localStorage.getItem('pbGems');
+
+    // Show/Hide Revive Button
+    const reviveContainer = document.querySelector('.revive-container');
+    if (reviveContainer) reviveContainer.style.display = canRevive ? 'block' : 'none';
+
+    // Delay the restart button
+    if (restartBtn) {
+        restartBtn.disabled = true;
+        let countdown = 3;
+        if (restartTimerDisplay) restartTimerDisplay.innerText = `(${countdown}s)`;
+        
+        const timerInt = setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                clearInterval(timerInt);
+                restartBtn.disabled = false;
+                if (restartTimerDisplay) restartTimerDisplay.innerText = "";
+            } else {
+                if (restartTimerDisplay) restartTimerDisplay.innerText = `(${countdown}s)`;
+            }
+        }, 1000);
+    }
+
     gameOverScreen.classList.remove('hidden');
     setTimeout(() => {
         gameOverScreen.classList.add('active');
     }, 10);
-    finalScoreDisplay.innerText = Math.max(0, score);
+}
+
+function revivePlayer() {
+    if (!canRevive) return;
+    canRevive = false;
+    
+    // Open monetization link in a windowed tab (popup)
+    window.open('https://omg10.com/4/10860929', '_blank', 'width=1000,height=800');
+    
+    // Clear area around player
+    const clearRadius = 600;
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        if (dist(mainPlayer.x, mainPlayer.y, e.x, e.y) < clearRadius) {
+            deathEffects.push(new DeathEffect(e.x, e.y));
+            enemies.splice(i, 1);
+        }
+    }
+    
+    // Reset state to playing
+    invincibleTimer = 3.0; // 3 seconds of safety
+    gameState = 'PLAYING';
+    
+    gameOverScreen.classList.remove('active');
+    setTimeout(() => {
+        gameOverScreen.classList.add('hidden');
+        hud.classList.remove('hidden');
+        xpBarContainer.style.display = 'block';
+    }, 300);
+}
+
+if (reviveBtn) {
+    reviveBtn.addEventListener('click', revivePlayer);
 }
 
 function backToStartMenu() {
