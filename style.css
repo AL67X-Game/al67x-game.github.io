@@ -799,39 +799,71 @@ button.destructive-btn:hover {
     padding: 12px 24px;
   }
 
-  /* Compact Death Screen for Mobile */
+  /* Compact Death Screen for Mobile Overhaul */
+  .panel.destructive {
+    padding: 15px 10px;
+  }
+  
   .panel.destructive h1 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
+    font-size: 1.6rem;
+    margin-bottom: 2px;
+  }
+  
+  .panel.destructive p {
+    font-size: 1rem;
+    margin-bottom: 10px;
   }
   
   #big-sad-player {
-    width: 140px; 
+    width: 90px; 
+    margin-top: 5px;
   }
 
   .death-aesthetic {
-    margin-top: 10px;
+    margin-top: 5px;
   }
 
   .death-stats {
-    gap: 15px;
-    margin: 10px 0;
-    padding: 12px;
+    gap: 10px;
+    margin: 8px 0;
+    padding: 10px;
+  }
+
+  .stat-group span:first-child {
+    font-size: 0.7rem;
   }
 
   .stat-group span:nth-child(2) {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
+  }
+
+  .pb-label {
+    font-size: 0.7rem;
+    margin-top: 4px;
+    padding: 1px 6px;
   }
 
   .revive-btn {
-    padding: 14px 20px;
-    font-size: 1.1rem !important;
-    margin-bottom: 10px;
+    padding: 12px 15px;
+    font-size: 1rem !important;
+    margin-bottom: 8px;
+    max-width: 100%;
   }
 
   .difficulty-buttons {
-    margin-top: 15px;
-    gap: 10px;
+    margin-top: 8px;
+    gap: 8px;
+    flex-direction: row; /* Buttons side-by-side */
+    width: 100%;
+    justify-content: center;
+  }
+
+  .difficulty-buttons button {
+    font-size: 0.9rem;
+    padding: 10px 15px;
+    flex: 1; /* Equal width */
+    max-width: 160px;
+    line-height: 1.1;
   }
 }
 
