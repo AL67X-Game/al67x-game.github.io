@@ -798,6 +798,41 @@ button.destructive-btn:hover {
     font-size: 1.2rem;
     padding: 12px 24px;
   }
+
+  /* Compact Death Screen for Mobile */
+  .panel.destructive h1 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+  }
+  
+  #big-sad-player {
+    width: 140px; 
+  }
+
+  .death-aesthetic {
+    margin-top: 10px;
+  }
+
+  .death-stats {
+    gap: 15px;
+    margin: 10px 0;
+    padding: 12px;
+  }
+
+  .stat-group span:nth-child(2) {
+    font-size: 1.6rem;
+  }
+
+  .revive-btn {
+    padding: 14px 20px;
+    font-size: 1.1rem !important;
+    margin-bottom: 10px;
+  }
+
+  .difficulty-buttons {
+    margin-top: 15px;
+    gap: 10px;
+  }
 }
 
 /* ── VERY SMALL SCREENS (<380px) ────────────────────────── */
