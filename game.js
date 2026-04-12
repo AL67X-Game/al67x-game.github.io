@@ -41,6 +41,10 @@ const imgBg = document.getElementById('img-bg');
 const imgPowerNuke = document.getElementById('img-power-nuke');
 const imgPowerStar = document.getElementById('img-power-star');
 const imgPowerSlow = document.getElementById('img-power-slow');
+const imgPlayerEat = document.getElementById('img-player-eat');
+const imgPlayerCry = document.getElementById('img-player-cry');
+const imgPlayerSucc = document.getElementById('img-player-succ');
+const imgPlayerSad = document.getElementById('img-player-sad');
 
 // Game State
 let gameState = 'START'; 
@@ -272,6 +276,7 @@ class Gem {
             const pull = 900 * dt * (1 - (d / magnetRange) * 0.5);
             this.x += Math.cos(angle) * pull;
             this.y += Math.sin(angle) * pull;
+            mainPlayer.isSucking = true;
         }
         this.x += this.vx * dt;
         this.y += this.vy * dt;
@@ -280,6 +285,7 @@ class Gem {
             this.dead = true;
             gemsCount++;
             gemsDisplay.innerText = gemsCount;
+            mainPlayer.lastEatenTimer = 0; // Reset hunger on gem collect too
         }
     }
     draw() {
@@ -402,15 +408,20 @@ class Player {
         this.x = MAP_WIDTH / 2;
         this.y = MAP_HEIGHT / 2;
         this.radius = 50;
-        this.baseSpeed = 600; 
+        this.eatTimer = 0;
+        this.lastEatenTimer = 0;
+        this.isSucking = false;
         this.facingLeft = false;
+        this.eatTimer = 0;
     }
 
     update(dt) {
+        this.lastEatenTimer += dt;
+        let speed = 400 * (1 + (playerUpgrades.speed * 0.15));
         const targetX = (mouse.x / cameraZoom) + camera.x;
         const targetY = (mouse.y / cameraZoom) + camera.y;
 
-        let currentSpeed = this.baseSpeed * (1 + (playerUpgrades.speed * 0.25));
+        let currentSpeed = speed;
         if (invincibleTimer > 0) {
             currentSpeed *= 1.5; 
         }
@@ -438,6 +449,8 @@ class Player {
         if (this.x > MAP_WIDTH - this.radius) this.x = MAP_WIDTH - this.radius;
         if (this.y < this.radius) this.y = this.radius;
         if (this.y > MAP_HEIGHT - this.radius) this.y = MAP_HEIGHT - this.radius;
+
+        if (this.eatTimer > 0) this.eatTimer -= dt;
     }
 
     draw() {
@@ -489,7 +502,15 @@ class Player {
         ctx.shadowBlur = 30;
 
         if (imgPlayer.complete && imgPlayer.naturalHeight !== 0) {
-            ctx.drawImage(imgPlayer, -this.radius, -this.radius, this.radius * 2, this.radius * 2);
+            let currentImg = imgPlayer;
+            if (this.eatTimer > 0) {
+                currentImg = imgPlayerEat;
+            } else if (this.isSucking) {
+                currentImg = imgPlayerSucc;
+            } else if (this.lastEatenTimer > 10.0) {
+                currentImg = imgPlayerCry;
+            }
+            ctx.drawImage(currentImg, -this.radius, -this.radius, this.radius * 2, this.radius * 2);
         } else {
             ctx.fillStyle = '#00f3ff';
             ctx.beginPath();
@@ -1164,16 +1185,13 @@ function initGame(diffMode) {
 
 function spawnEnemy() {
     const roll = Math.random();
-    const isAllen = globalDifficulty === 'allen';
-    const tankThreshold = isAllen ? 30 : 45;
-    
-    // Tank probability scales from 10% to 30% over 5 minutes
-    const tankProb = 0.1 + Math.min(0.2, gameTimeSeconds / 300);
+    // Tank probability scales from 8% to 35% over 5 minutes (less rare)
+    const tankProb = 0.08 + Math.min(0.27, gameTimeSeconds / 300);
 
     // If ghosts unlocked, 30% chance to spawn ghost
     if (ghostsUnlocked && roll < 0.3) {
         enemies.push(new EnemyGhost());
-    } else if (gameTimeSeconds > tankThreshold && roll < tankProb) {
+    } else if (roll < tankProb) {
         enemies.push(new EnemyTank());
     } else if (gameTimeSeconds > 10 && roll < 0.5) {
         enemies.push(new EnemyCharger());
@@ -1346,6 +1364,8 @@ function update(dt) {
 
     if (invincibleTimer > 0) invincibleTimer -= dt;
     if (timeFreezeTimer > 0) timeFreezeTimer -= dt;
+
+    mainPlayer.isSucking = false; // Reset sucking state each frame
 
     // Special Round Monitor
     if (level === 5 && !specialWaveCompleted && !specialWaveActive) {
@@ -1530,6 +1550,7 @@ function update(dt) {
             const pullSpeed = 800 * dt; 
             item.x += Math.cos(angle) * pullSpeed;
             item.y += Math.sin(angle) * pullSpeed;
+            mainPlayer.isSucking = true; // Sucking items
         }
         
         if (dist(mainPlayer.x, mainPlayer.y, item.x, item.y) < mainPlayer.radius + item.radius + 15) {
@@ -1538,6 +1559,8 @@ function update(dt) {
             score++;
             scoreDisplay.innerText = Math.max(0, score);
             followers.push(new Follower(followers.length));
+            mainPlayer.eatTimer = 0.2; 
+            mainPlayer.lastEatenTimer = 0; // Reset hunger
         }
     }
     
@@ -1610,7 +1633,6 @@ function draw(time) {
         ctx.scale(cameraZoom, cameraZoom);
         ctx.translate(-camera.x, -camera.y);
 
-        items.forEach(item => item.draw(time));
         powerups.forEach(p => p.draw(time));
         gems.forEach(gem => gem.draw());
         
@@ -1621,6 +1643,7 @@ function draw(time) {
         for (let i = followers.length - 1; i >= 0; i--) followers[i].draw();
 
         mainPlayer.draw();
+        items.forEach(item => item.draw(time));
         enemies.forEach(enemy => enemy.draw());
         projectiles.forEach(proj => proj.draw());
         orbitalSaws.forEach(saw => saw.draw());

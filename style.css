@@ -309,6 +309,32 @@ button.destructive-btn:hover {
   margin: 0;
 }
 
+.revive-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    background: #ff5588;
+}
+
+/* Death Aesthetic */
+.death-aesthetic {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+#big-sad-player {
+    width: 250px;
+    height: auto;
+    filter: drop-shadow(0 10px 30px rgba(255, 0, 0, 0.4));
+    animation: float-sad 3s ease-in-out infinite;
+}
+
+@keyframes float-sad {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+/* Transitions */
 .game-card:hover {
   transform: translateY(-10px) scale(1.05);
   box-shadow: 12px 14px 0px #000;
