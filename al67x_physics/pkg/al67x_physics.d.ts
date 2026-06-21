@@ -1,6 +1,18 @@
 /* tslint:disable */
 /* eslint-disable */
 
+export class SwipeResult {
+    private constructor();
+    free(): void;
+    [Symbol.dispose](): void;
+    action: number;
+    offset_x: number;
+    offset_y: number;
+    rotation: number;
+}
+
+export function calculate_swipe(drag_x: number, drag_y: number, screen_width: number, is_released: boolean): SwipeResult;
+
 export function check_circle_collisions(cx: number, cy: number, c_radius: number, x_coords: Float64Array, y_coords: Float64Array, radii: Float64Array): Uint32Array;
 
 export function check_magnet_zone(px: number, py: number, p_radius: number, magnet_range: number, x_coords: Float64Array, y_coords: Float64Array, radii: Float64Array): Uint32Array;
@@ -11,6 +23,16 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
+    readonly __wbg_get_swiperesult_action: (a: number) => number;
+    readonly __wbg_get_swiperesult_offset_x: (a: number) => number;
+    readonly __wbg_get_swiperesult_offset_y: (a: number) => number;
+    readonly __wbg_get_swiperesult_rotation: (a: number) => number;
+    readonly __wbg_set_swiperesult_action: (a: number, b: number) => void;
+    readonly __wbg_set_swiperesult_offset_x: (a: number, b: number) => void;
+    readonly __wbg_set_swiperesult_offset_y: (a: number, b: number) => void;
+    readonly __wbg_set_swiperesult_rotation: (a: number, b: number) => void;
+    readonly __wbg_swiperesult_free: (a: number, b: number) => void;
+    readonly calculate_swipe: (a: number, b: number, c: number, d: number) => number;
     readonly check_circle_collisions: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => any;
     readonly check_magnet_zone: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number) => any;
     readonly dist: (a: number, b: number, c: number, d: number) => number;

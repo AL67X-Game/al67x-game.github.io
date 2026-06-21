@@ -1,5 +1,89 @@
 /* @ts-self-types="./al67x_physics.d.ts" */
 
+export class SwipeResult {
+    static __wrap(ptr) {
+        const obj = Object.create(SwipeResult.prototype);
+        obj.__wbg_ptr = ptr;
+        SwipeResultFinalization.register(obj, obj.__wbg_ptr, obj);
+        return obj;
+    }
+    __destroy_into_raw() {
+        const ptr = this.__wbg_ptr;
+        this.__wbg_ptr = 0;
+        SwipeResultFinalization.unregister(this);
+        return ptr;
+    }
+    free() {
+        const ptr = this.__destroy_into_raw();
+        wasm.__wbg_swiperesult_free(ptr, 0);
+    }
+    /**
+     * @returns {number}
+     */
+    get action() {
+        const ret = wasm.__wbg_get_swiperesult_action(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get offset_x() {
+        const ret = wasm.__wbg_get_swiperesult_offset_x(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get offset_y() {
+        const ret = wasm.__wbg_get_swiperesult_offset_y(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @returns {number}
+     */
+    get rotation() {
+        const ret = wasm.__wbg_get_swiperesult_rotation(this.__wbg_ptr);
+        return ret;
+    }
+    /**
+     * @param {number} arg0
+     */
+    set action(arg0) {
+        wasm.__wbg_set_swiperesult_action(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set offset_x(arg0) {
+        wasm.__wbg_set_swiperesult_offset_x(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set offset_y(arg0) {
+        wasm.__wbg_set_swiperesult_offset_y(this.__wbg_ptr, arg0);
+    }
+    /**
+     * @param {number} arg0
+     */
+    set rotation(arg0) {
+        wasm.__wbg_set_swiperesult_rotation(this.__wbg_ptr, arg0);
+    }
+}
+if (Symbol.dispose) SwipeResult.prototype[Symbol.dispose] = SwipeResult.prototype.free;
+
+/**
+ * @param {number} drag_x
+ * @param {number} drag_y
+ * @param {number} screen_width
+ * @param {boolean} is_released
+ * @returns {SwipeResult}
+ */
+export function calculate_swipe(drag_x, drag_y, screen_width, is_released) {
+    const ret = wasm.calculate_swipe(drag_x, drag_y, screen_width, is_released);
+    return SwipeResult.__wrap(ret);
+}
+
 /**
  * @param {number} cx
  * @param {number} cy
@@ -77,6 +161,10 @@ function __wbg_get_imports() {
         "./al67x_physics_bg.js": import0,
     };
 }
+
+const SwipeResultFinalization = (typeof FinalizationRegistry === 'undefined')
+    ? { register: () => {}, unregister: () => {} }
+    : new FinalizationRegistry(ptr => wasm.__wbg_swiperesult_free(ptr, 1));
 
 function getArrayU32FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
