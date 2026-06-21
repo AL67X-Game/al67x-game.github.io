@@ -42,6 +42,7 @@ body, html {
 canvas {
   display: block;
   z-index: 1;
+  cursor: crosshair;
 }
 
 .hidden {

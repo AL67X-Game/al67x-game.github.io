@@ -1,3 +1,10 @@
+import init, { dist as wasm_dist } from './al67x_physics/pkg/al67x_physics.js';
+
+// Initialize Wasm before any heavy math
+init().then(() => {
+    console.log("AL67X WebAssembly Physics Engine Loaded!");
+});
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -52,6 +59,7 @@ let globalDifficulty = 'normal';
 let score = 0;
 let animationId;
 let lastFrameTime = 0;
+let screenShake = 0;
 
 // RPG Mechanics
 let gameTimeSeconds = 0;
@@ -180,15 +188,39 @@ window.addEventListener('keydown', (e) => {
             pauseScreen.classList.remove('hidden');
             pauseScreen.classList.add('active');
         } else if (gameState === 'PAUSED') {
-            gameState = 'PLAYING';
+            gameState = 'UNPAUSING';
             pauseScreen.classList.remove('active');
             setTimeout(() => pauseScreen.classList.add('hidden'), 300);
+            
+            const unpauseScreen = document.getElementById('unpause-screen');
+            const unpauseCountdown = document.getElementById('unpause-countdown');
+            if (unpauseScreen && unpauseCountdown) {
+                unpauseScreen.classList.remove('hidden');
+                setTimeout(() => unpauseScreen.classList.add('active'), 10);
+                
+                let count = 3;
+                unpauseCountdown.innerText = count;
+                const timerInt = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        unpauseCountdown.innerText = count;
+                    } else {
+                        clearInterval(timerInt);
+                        unpauseScreen.classList.remove('active');
+                        setTimeout(() => unpauseScreen.classList.add('hidden'), 300);
+                        gameState = 'PLAYING';
+                        lastFrameTime = performance.now();
+                    }
+                }, 1000);
+            } else {
+                gameState = 'PLAYING';
+            }
         }
     }
 });
 
 // Math Helpers
-function dist(x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); }
+function dist(x1, y1, x2, y2) { return wasm_dist(x1, y1, x2, y2); }
 function lerp(start, end, amt) { return (1 - amt) * start + amt * end; }
 
 function formatTime(seconds) {
@@ -607,6 +639,7 @@ class EnemyBase {
         this.type = 'base';
         this.facingLeft = false;
         this.glowColor = '255, 31, 90'; // rgb red
+        this.hitFlashTimer = 0;
     }
     
     getSpeed() {
@@ -617,6 +650,7 @@ class EnemyBase {
 
     takeDamage() {
         this.hp--;
+        this.hitFlashTimer = 0.1;
         if (this.hp <= 0) this.dead = true;
     }
 
@@ -642,11 +676,22 @@ class EnemyBase {
 
         if (this.img && this.img.complete && this.img.naturalHeight !== 0) {
             ctx.drawImage(this.img, -this.radius, -this.radius, this.radius * 2, this.radius * 2);
+            if (this.hitFlashTimer > 0) {
+                ctx.globalCompositeOperation = 'source-atop';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fillRect(-this.radius, -this.radius, this.radius * 2, this.radius * 2);
+                ctx.globalCompositeOperation = 'source-over';
+            }
         } else {
             ctx.fillStyle = `rgb(${this.glowColor})`;
             ctx.beginPath();
             ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
             ctx.fill();
+            
+            if (this.hitFlashTimer > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.fill();
+            }
             
             ctx.strokeStyle = '#fff';
             ctx.lineWidth = 3;
@@ -1296,6 +1341,11 @@ function updateCamera() {
     camera.x = mainPlayer.x - viewW / 2;
     camera.y = mainPlayer.y - viewH / 2;
 
+    if (screenShake > 0) {
+        camera.x += (Math.random() - 0.5) * screenShake;
+        camera.y += (Math.random() - 0.5) * screenShake;
+    }
+
     if (camera.x < -200) camera.x = -200;
     if (camera.y < -200) camera.y = -200;
     if (camera.x > MAP_WIDTH - viewW + 200) camera.x = MAP_WIDTH - viewW + 200;
@@ -1364,6 +1414,10 @@ function update(dt) {
 
     if (invincibleTimer > 0) invincibleTimer -= dt;
     if (timeFreezeTimer > 0) timeFreezeTimer -= dt;
+    if (screenShake > 0) {
+        screenShake -= dt * 60;
+        if (screenShake < 0) screenShake = 0;
+    }
 
     mainPlayer.isSucking = false; // Reset sucking state each frame
 
@@ -1411,6 +1465,7 @@ function update(dt) {
         }
         
         if (nukeCooldown <= 0 && playerUpgrades.nuke > 0) {
+            screenShake = 30;
             let nukeRadius = 300 + (playerUpgrades.nuke * 150);
             bombs.push(new Bomb(mainPlayer.x, mainPlayer.y, nukeRadius));
             nukeCooldown = 4;
@@ -1422,6 +1477,7 @@ function update(dt) {
         }
         
         if (novaCooldown <= 0 && playerUpgrades.nova > 0) {
+            screenShake = 20;
             for(let i=0; i<12; i++) {
                 let angle = (Math.PI * 2 / 12) * i;
                 projectiles.push(new Projectile(mainPlayer.x, mainPlayer.y, angle));
@@ -1480,6 +1536,7 @@ function update(dt) {
         }
 
         enemy.update(dt);
+        if (enemy.hitFlashTimer > 0) enemy.hitFlashTimer -= dt;
 
         const distToPlayer = dist(mainPlayer.x, mainPlayer.y, enemy.x, enemy.y);
         
@@ -1504,6 +1561,7 @@ function update(dt) {
                 for(let j = followers.length - 1; j >= 0; j--) {
                     const follower = followers[j];
                     if (dist(follower.x, follower.y, enemy.x, enemy.y) < follower.radius + enemy.radius) {
+                        screenShake = 15;
                         deathEffects.push(new DeathEffect(follower.x, follower.y));
                         followers.splice(j, 1);
                         score--;

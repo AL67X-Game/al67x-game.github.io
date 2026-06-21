@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Al67X Simulator</title>
-    <link rel="icon" href="player.png" type="image/png">
+    <link rel="icon" href="images/player.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
 
@@ -94,7 +94,7 @@
                 <button id="menu-btn" class="bouncy-btn" style="background:#fff; color:#000;">MAIN MENU</button>
             </div>
             <div class="death-aesthetic">
-                <img id="big-sad-player" src="player_cry.png" alt="Big Sad Player">
+                <img id="big-sad-player" src="images/player_cry.png" alt="Big Sad Player">
             </div>
         </div>
     </div>
@@ -104,6 +104,13 @@
         <div class="panel">
             <h1 id="pause-title">PAUSED</h1>
             <p id="pause-desc">Take a breather bro...</p>
+        </div>
+    </div>
+
+    <!-- Unpause Countdown Overlay -->
+    <div id="unpause-screen" class="overlay hidden">
+        <div class="panel" style="background: transparent; box-shadow: none; border: none;">
+            <h1 class="bounce-title" id="unpause-countdown" style="font-size: 150px; color: #00f3ff; text-shadow: 0 0 50px #00f3ff; -webkit-text-stroke: 4px #000;">3</h1>
         </div>
     </div>
 
@@ -123,24 +130,24 @@
 
     <!-- Images Preloader (hidden) -->
     <div style="display:none;">
-        <img id="img-player" src="player.png" alt="Player">
-        <img id="img-enemy" src="enemy.png" alt="Enemy">
-        <img id="img-enemy-charger" src="enemy_charger.png" alt="Charger">
-        <img id="img-enemy-tank" src="enemy_tank.png" alt="Tank">
-        <img id="img-enemy-ghost" src="ghost.png" alt="Ghost">
-        <img id="img-item" src="item.png" alt="Item">
-        <img id="img-bg" src="background.png" alt="Background">
-        <img id="img-player-eat" src="player_eat.png" alt="Player Eating">
-        <img id="img-power-nuke" src="nuke.png">
-        <img id="img-power-star" src="star.png">
-        <img id="img-power-slow" src="slow.png">
-        <img id="img-player-cry" src="player_cry.png" alt="Player Crying">
-        <img id="img-player-succ" src="player_succ.png" alt="Player Sucking">
-        <img id="img-player-sad" src="player_sad.png" alt="Player Sad">
+        <img id="img-player" src="images/player.png" alt="Player">
+        <img id="img-enemy" src="images/enemy.png" alt="Enemy">
+        <img id="img-enemy-charger" src="images/enemy_charger.png" alt="Charger">
+        <img id="img-enemy-tank" src="images/enemy_tank.png" alt="Tank">
+        <img id="img-enemy-ghost" src="images/ghost.png" alt="Ghost">
+        <img id="img-item" src="images/item.png" alt="Item">
+        <img id="img-bg" src="images/background.png" alt="Background">
+        <img id="img-player-eat" src="images/player_eat.png" alt="Player Eating">
+        <img id="img-power-nuke" src="images/nuke.png">
+        <img id="img-power-star" src="images/star.png">
+        <img id="img-power-slow" src="images/slow.png">
+        <img id="img-player-cry" src="images/player_cry.png" alt="Player Crying">
+        <img id="img-player-succ" src="images/player_succ.png" alt="Player Sucking">
+        <img id="img-player-sad" src="images/player_sad.png" alt="Player Sad">
     </div>
 
     <!-- Scripts: content config first, then game logic -->
     <script src="content.js"></script>
-    <script src="game.js"></script>
+    <script type="module" src="game.js"></script>
 </body>
 </html>
