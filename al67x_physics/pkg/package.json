@@ -1,0 +1,15 @@
+{
+  "name": "al67x_physics",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "al67x_physics_bg.wasm",
+    "al67x_physics.js",
+    "al67x_physics.d.ts"
+  ],
+  "main": "al67x_physics.js",
+  "types": "al67x_physics.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
