@@ -1,19 +1,16 @@
-# Nim code for swipe detection
-# This will handle swipe gestures for the Instagram card
+# nim/swipe_detector.nim
+# Wrapper around the Rust `calculate_swipe` function.
+# Compile with:  nim c -d:release --js:swipe_detector.js nim/swipe_detector.nim
 
-proc detectSwipe(x: float, y: float, screen_width: float, released: bool): tuple[
-  offset_x: float, offset_y: float, rotation: float, action: int] =
-  result = calculateSwipe(x, y, screen_width, released)
+proc calculateSwipe(dragX, dragY, screenW: float, released: bool): tuple[
+    offsetX, offsetY, rotation, action: float]. {.importc: "calculate_swipe",
+    dynlib: "al67x_physics/pkg/al67x_physics.js".}
 
-proc checkMagnetZone(px: float, py: float, p_radius: float,
-                    magnet_range: float, x_coords: seq[float],
-                    y_coords: seq[float], radii: seq[float]): seq[int] =
-  var pulled_indices = @[]
-  let len = x_coords.len
-  for i in 0..<len:
-    let dx = x_coords[i] - px
-    let dy = y_coords[i] - py
-    let d = sqrt(dx*dx + dy*dy)
-    if d < magnet_range and d > p_radius + radii[i]:
-      pulled_indices.add i
-  result = pulled_indices
+proc handleSwipe(dragX, dragY, screenW: float, released: bool) =
+  let res = calculateSwipe(dragX, dragY, screenW, released)
+  if res.action == 1.0:
+    # Right swipe → revive
+    revivePlayer()
+  elif res.action == -1.0:
+    # Left swipe → immediate game over
+    endGame()
