@@ -1,0 +1,12 @@
+{
+  "name": "al67x-simulator",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "make build",
+    "start": "echo \"Serve the folder with any static server (e.g. npx serve .)\""
+  },
+  "devDependencies": {
+    "nim": "^0.20.0"
+  }
+}
